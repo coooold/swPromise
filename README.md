@@ -28,7 +28,8 @@ tsf使用了较为复杂的用户态任务调度逻辑，暂时没有看到生�
 swPromise的主要处理流程在Core\Async\Promise类中。
 该类实现了基本的then方法，并通过对promise流程的延迟计算，保证了异步流程的动态控制能力。
 该框架是一个非常基础的web框架，目前仅实现通用Future（通用延迟计算）、HttpClientFuture、ResponseFuture三个延迟计算类。
-其中HttpClientFuture完全抄袭tsf框架的HTTP Client类，在此表示感谢。
+
+该框架需要配合php-http-parser扩展使用，用于解析http协议。
 
 ## 演示代码
 
@@ -65,11 +66,11 @@ class Handler_Index extends \Core\Handler{
 而使用回调的方式，代码会变得极为恐怖。
 
 ## 存在问题
-目前没有实现when/any方法，因此无法实现多个promise并行发出。另外由于http client部分使用php对http response进行解析，效率比较差。
-总体来看，该框架性能并不如swoole推荐的半异步半同步的开发模式。性能评测数据就暂不放出了，有兴趣的可以自行测试。
+目前没有实现when/any方法，因此无法实现多个promise并行发出。
 其中Handler_Sync实现的就是该框架同步的使用方式。
-
 另外，目前reject方法以及异常处理流程均没有实现，有兴趣的朋友可以自行扩展。
+
+目前有一个比较严重的bug，如果大量http request没有完成就自行中断的话，会导致swoole http server发生错误，从而退出。在swoole前面放一个nginx就可以解决问题。
 
 ## 测试方法
 启动
