@@ -52,6 +52,7 @@ class Promise {
 	public function start($context) {
 		$headPromise = $this->getHeadPromise ();
 		$headPromise->run ( $context );
+		unset($headPromise);
 	}
 
 	// 成功后执行
@@ -61,6 +62,7 @@ class Promise {
 				$this->context->merge($ret);
 			}
 			$this->nextPromise->run ( $this->context );
+			unset($this->nextPromise);
 		}
 	}
 
@@ -94,6 +96,7 @@ class Promise {
 	protected function run(PromiseContext $context) {
 		$this->context = $context;
 		$ret = $this->future->run ( $this, $context );
+		unset($this->future);
 
 		// 如果返回值是个promise，那么把后续的promise链条挂载到这个promise后面，然后继续执行
 		if ($ret instanceof Promise) {

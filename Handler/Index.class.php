@@ -11,17 +11,7 @@ use \Core\Async\HttpClientFuture;
 class Handler_Index extends \Core\Handler{
 	public function run($request, $response){
 		Promise::create ( Model::getUserInfo ( 'user1', 'haha' ) )
-			->then (function(&$promise){
-				$user1 = $promise->get('user1');
-				if($user1){
-					return Model::getUserInfo ( 'user2', 'haha2' )
-							->then(function(&$promise){
-								$user2 = $promise->get('user2');
-								$promise->accept(['user3'=>$user2['body']]);
-							});
-				}
-				else $promise->accept();
-			})
+			->then (Model::getUserInfo ( 'user2', 'haha2' ))
 			->then ( new ResponseFuture ($response) )
 			->start ( new PromiseContext () );
 	}
@@ -47,7 +37,7 @@ class Model {
 	
 	static public function getUserInfo($ret, $usr){
 		$params = array();
-		$url = 'http://192.168.6.20/fang/swAsync/1.json';
+		$url = 'http://127.0.0.1:9932/fang/swAsync/1.json';
 		
 		return Service::get ( $url,$params )->then ( function ($promise) use($ret) {
 			$data = $promise->get ( 'http_data' );

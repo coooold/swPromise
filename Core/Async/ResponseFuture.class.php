@@ -15,6 +15,7 @@ class ResponseFuture implements FutureIntf {
 	public function run(Promise &$promise) {
 		$data = json_encode($promise->getData());
 		$this->response->end($data);
+		//echo "Mem: ",\memory_get_usage() / 1024,"k \n";
 		$promise->accept ();
 	}
 }
