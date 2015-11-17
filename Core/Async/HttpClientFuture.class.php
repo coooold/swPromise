@@ -10,9 +10,9 @@ class HttpClientFuture implements FutureIntf {
 	protected $post = null;
 	protected $timer = null;
 	protected $proxy = false;
-	protected $timeout = 200;
+	protected $timeout = 0.5;
 	
-	public function __construct($url, $post = array(), $proxy = array(), $timeout = 200) {
+	public function __construct($url, $post = array(), $proxy = array(), $timeout = 0.5) {
 		$this->url = $url;
 		$this->post = $post;
 		if($proxy){
@@ -20,6 +20,9 @@ class HttpClientFuture implements FutureIntf {
 		}
 		$this->timeout = $timeout;
 	}
+	
+
+	
 	public function run(Promise &$promise) {
 		$cli = new \swoole_client ( SWOOLE_TCP, SWOOLE_SOCK_ASYNC );
 		$urlInfo = parse_url ( $this->url );
@@ -28,11 +31,13 @@ class HttpClientFuture implements FutureIntf {
 		
 		$httpParser = new \HttpParser();
 
-		$cli->on ( "connect", function ($cli)use($urlInfo, &$promise, &$timeout){
-			Timer::add($cli->sock, $timeout, function()use(&$promise){
+		$cli->on ( "connect", function ($cli)use($urlInfo, &$timeout, &$promise){
+			Timer::add($cli->sock, $timeout, function()use(&$cli, &$promise){
+				Timer::del($sock);
+				echo intval(\memory_get_usage()/1024),"k\n";
 				$promise->accept(['http_data'=>null, 'http_error'=>'Read timeout']);
 			});
-
+			
 			$host = $urlInfo['host'];
 			if($urlInfo['port'])$host .= ':'.$urlInfo['port'];
 			$req = array();
@@ -50,6 +55,7 @@ class HttpClientFuture implements FutureIntf {
 			$ret = $httpParser->execute($data);
 			if($ret !== false){
 				Timer::del($cli->sock);
+				$cli->isDone = true;
 				if($cli->isConnected())$cli->close();
 				$promise->accept(['http_data'=>$ret]);
 			}
@@ -60,8 +66,8 @@ class HttpClientFuture implements FutureIntf {
 		} );
 		$cli->on ( "close", function ($cli) {
 		} );
-		
-		
+
 		$ret = $cli->connect ( $urlInfo ['host'], $urlInfo ['port'], 0.05 );
+		
 	}
 }
