@@ -67,8 +67,24 @@ class Handler_Index extends \Core\Handler{
 同样的，整个流程通过then串联起来，已经较为接近同步代码的书写了。
 而使用回调的方式，代码会变得极为恐怖。
 
+
+## 并行请求
+
+```php
+class Handler_Index extends \Core\Handler{
+	public function run($request, $response){
+		Promise::create([
+			Model::getUserInfo ( 'user1', 'haha' ),
+			Model::getUserInfo ( 'user2', 'haha2' ),
+		])->then(
+			new ResponseFuture ($response)
+		)->start(new PromiseContext ());
+	}
+}
+```
+这个请求并行获得haha与hah2两个用户的数据，分布放到user1和user2两个字段中。
+
 ## 存在问题
-目前没有实现when/any方法，因此无法实现多个promise并行发出。
 其中Handler_Sync实现的就是该框架同步的使用方式。
 另外，目前reject方法以及异常处理流程均没有实现，有兴趣的朋友可以自行扩展。
 
