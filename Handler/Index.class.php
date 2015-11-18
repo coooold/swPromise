@@ -10,10 +10,12 @@ use \Core\Async\HttpClientFuture;
  */
 class Handler_Index extends \Core\Handler{
 	public function run($request, $response){
-		Promise::create ( Model::getUserInfo ( 'user1', 'haha' ) )
-			//->then (Model::getUserInfo ( 'user2', 'haha2' ))
-			->then ( new ResponseFuture ($response) )
-			->start ( new PromiseContext () );
+		Promise::create([
+			Model::getUserInfo ( 'user1', 'haha' ),
+			Model::getUserInfo ( 'user2', 'haha2' ),
+		])->then(
+			new ResponseFuture ($response)
+		)->start(new PromiseContext ());
 	}
 }
 

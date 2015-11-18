@@ -11,7 +11,9 @@ class PromiseContext {
 		$this->data [$k] = $v;
 	}
 	public function merge($data){
-		$this->data = array_merge($data, $this->data);
+		if(is_array($data)){
+			$this->data = array_merge($data, $this->data);
+		}
 	}
 	public function get($k) {
 		return $this->data [$k];

@@ -33,7 +33,7 @@ class HttpClientFuture implements FutureIntf {
 
 		$cli->on ( "connect", function ($cli)use($urlInfo, &$timeout, &$promise){
 			Timer::add($cli->sock, $timeout, function()use(&$cli, &$promise){
-				Timer::del($sock);
+				Timer::del($cli->sock);
 				$promise->accept(['http_data'=>null, 'http_error'=>'Read timeout']);
 			});
 			

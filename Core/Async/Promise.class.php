@@ -8,8 +8,8 @@ namespace Core\Async;
 class Promise {
 	public $context = null;		//PromiseContext
 	protected $future;				//FutureIntf
-	protected $lastPromise = null;	//PromiseContext
-	protected $nextPromise = null;	//PromiseContext
+	protected $lastPromise = null;	//Promise
+	protected $nextPromise = null;	//Promise
 	protected function __construct($future) {
 		$this->future = $future;
 	}
@@ -21,10 +21,13 @@ class Promise {
 			return new self ( $sth );
 		} elseif ($sth instanceof Promise) {
 			return $sth;
+		} elseif (is_array($sth)) {
+			return PromiseGroup::create($sth);
 		} else {
 			throw new Exception ( 'error sth type' );
 		}
 	}
+
 	public function then($sth) {
 		if (is_callable ( $sth )) {
 			$future = new Future ( $sth );
@@ -43,7 +46,12 @@ class Promise {
 			$this->nextPromise = $headPromise;
 			$headPromise->lastPromise = $this;
 			return $sth;
-		} else {
+		} elseif (is_array($sth)){
+			$nextPromise = PromiseGroup::create($sth);
+			$this->nextPromise = $nextPromise;
+			$nextPromise->lastPromise = $this;
+			return $nextPromise;
+		}else {
 			throw new Exception ( 'error sth type' );
 		}
 	}
@@ -55,8 +63,12 @@ class Promise {
 		unset($headPromise);
 	}
 
+	protected $accepted = false;
 	// 成功后执行
 	public function accept($ret = null) {
+		if($this->accepted)return;	//仅执行一次
+		$this->accepted = true;
+		
 		if ($this->nextPromise !== null) {
 			if(is_array($ret)){
 				$this->context->merge($ret);
