@@ -24,7 +24,7 @@ class Promise {
 		} elseif (is_array($sth)) {
 			return PromiseGroup::create($sth);
 		} else {
-			throw new Exception ( 'error sth type' );
+			throw new \Exception ( 'error sth type' );
 		}
 	}
 
