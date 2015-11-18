@@ -12,7 +12,7 @@ class PromiseContext {
 	}
 	public function merge($data){
 		if(is_array($data)){
-			$this->data = array_merge($data, $this->data);
+			$this->data = array_merge($this->data, $data);
 		}
 	}
 	public function get($k) {
