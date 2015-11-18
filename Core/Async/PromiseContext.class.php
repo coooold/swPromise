@@ -13,6 +13,8 @@ class PromiseContext {
 	public function merge($data){
 		if(is_array($data)){
 			$this->data = array_merge($this->data, $data);
+		}elseif($data instanceof PromiseContext){
+			$this->data = array_merge($this->data, $data->data);
 		}
 	}
 	public function get($k) {

@@ -28,16 +28,24 @@ class PromiseGroup extends Promise {
 
 	// /////////////////////////////////////////////
 
+	protected $phase = 0;	//执行阶段 0:map 1:reduce
+	protected $runCount = 0;
 	protected function run(PromiseContext $context) {
-		$this->context = $context;
-		
-		$subPromise = \array_pop($this->subPromiseArray);	//一个一个执行下去
-
-		if($subPromise){
-			$subPromise->start ( $this->context );
-			unset($subPromise);
-		}else{	//都执行完了
-			$this->accept();
+		if($this->phase == 0){
+			$this->context = $context;
+			$this->phase = 1;
+			$this->runCount = count($this->subPromiseArray);
+			foreach($this->subPromiseArray as $subPromise){
+				$subPromise->start ( $this->context );
+				unset($subPromise);
+			}
+			unset($this->subPromiseArray);
+		}else{
+			$this->context->merge($context);
+			$this->runCount --;
+			if($this->runCount == 0){//都执行完了
+				$this->accept();
+			}
 		}
 	}
 }

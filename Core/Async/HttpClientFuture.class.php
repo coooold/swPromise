@@ -36,7 +36,6 @@ class HttpClientFuture implements FutureIntf {
 				Timer::del($cli->sock);
 				$promise->accept(['http_data'=>null, 'http_error'=>'Read timeout']);
 			});
-			
 			$host = $urlInfo['host'];
 			if($urlInfo['port'])$host .= ':'.$urlInfo['port'];
 			$req = array();
@@ -66,7 +65,11 @@ class HttpClientFuture implements FutureIntf {
 		$cli->on ( "close", function ($cli) {
 		} );
 
-		$ret = $cli->connect ( $urlInfo ['host'], $urlInfo ['port'], 0.05 );
-		
+		if($this->proxy){
+			$cli->connect ( $this->proxy['host'], $this->proxy ['port'], 0.05 );
+		}else{
+			$ret = $cli->connect ( $urlInfo ['host'], $urlInfo ['port'], 0.05 );
+		}
+
 	}
 }
