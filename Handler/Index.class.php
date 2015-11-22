@@ -40,8 +40,8 @@ class Model {
 	static public function getUserInfo($ret, $usr){
 		$params = array();
 		//$url = 'http://127.0.0.1:9502/sync';
-		//$url = 'http://192.112.121.122/store.php?id=3269';
-		$url = 'http://localhost/';
+		$url = 'http://192.112.121.122/store.php?id=3269';
+		//$url = 'http://localhost/';
 		
 		return Service::get ( $url,$params )->then ( function ($promise) use($ret) {
 			$data = $promise->get ( 'http_data' );

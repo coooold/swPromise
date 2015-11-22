@@ -9,13 +9,14 @@ class Timer
 	static protected $sockSlotIndex = array();
 	static protected $tick = 0;
 	static protected $timer = null;
-	const LOOP_TIME = 0.2;
-	const SLOT_SIZE = 10;	//超时时间 = LOOP_TIME * SLOG_SIZE
+	const LOOP_TIME = 0.05;
+	const SLOT_SIZE = 200;
 	
-	static public function add ($sock, $callback){
+	static public function add ($sock, $timeout, $callback){
 		self::init();
-		self::$eventSlots[self::$tick][$sock] = $callback;
-		self::$sockSlotIndex[$sock] = self::$tick;
+		$tick = (self::$tick + intval($timeout/self::LOOP_TIME)) % self::SLOT_SIZE;
+		self::$eventSlots[$tick][$sock] = $callback;
+		self::$sockSlotIndex[$sock] = $tick;
 	}
 	
 	static public function del($sock){

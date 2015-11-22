@@ -70,7 +70,7 @@ class HttpClientFuture implements FutureIntf {
 		$cli->isConnected = false;
 
 		if(!$cli->errCode){
-			Timer::add($cli->sock, function()use($cli, &$promise){
+			Timer::add($cli->sock, $this->timeout, function()use($cli, &$promise){
 				@$cli->close();
 				if($cli->isConnected){
 					$promise->accept(['http_data'=>null, 'http_error'=>'Http client read timeout']);
