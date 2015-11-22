@@ -11,7 +11,7 @@ class Timer
 	
 	static public function add ($sock, $timeout, $callback){
 		self::init();
-		
+
 		$startTime = microtime(true);
 		$event = array(
 			'starttime' => microtime(true),

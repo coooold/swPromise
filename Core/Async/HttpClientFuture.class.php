@@ -32,7 +32,7 @@ class HttpClientFuture implements FutureIntf {
 		$httpParser = new \HttpParser();
 
 		$cli->on ( "connect", function ($cli)use($urlInfo, &$timeout, &$promise){
-			
+			$cli->isConnected = true;
 			$host = $urlInfo['host'];
 			if($urlInfo['port'])$host .= ':'.$urlInfo['port'];
 			$req = array();
@@ -59,20 +59,24 @@ class HttpClientFuture implements FutureIntf {
 			Timer::del($cli->sock);
 			$promise->accept(['http_data'=>null, 'http_error'=>'Connect error']);
 		} );
-		$cli->on ( "close", function ($cli) {
+		$cli->on ( "close", function ($cli)use(&$promise) {
 		} );
 
 		if($this->proxy){
 			$cli->connect ( $this->proxy['host'], $this->proxy ['port'], 0.05 );
 		}else{
-			$ret = $cli->connect ( $urlInfo ['host'], $urlInfo ['port'], 0.05 );
+			$cli->connect ( $urlInfo ['host'], $urlInfo ['port'], 0.05 );
 		}
+		$cli->isConnected = false;
 
 		if(!$cli->errCode){
 			Timer::add($cli->sock, $this->timeout, function()use($cli, &$promise){
-				Timer::del($cli->sock);
-				$cli->close();
-				$promise->accept(['http_data'=>null, 'http_error'=>'Http client timeout']);				
+				@$cli->close();
+				if($cli->isConnected){
+					$promise->accept(['http_data'=>null, 'http_error'=>'Http client read timeout']);
+				}else{
+					$promise->accept(['http_data'=>null, 'http_error'=>'Http client connect timeout']);
+				}
 			});
 		}
 	}
