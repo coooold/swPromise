@@ -11,8 +11,8 @@ use \Core\Async\HttpClientFuture;
 class Handler_Index extends \Core\Handler{
 	public function run($request, $response){
 		Promise::create([
-		//	Model::getUserInfo ( 'user1', 'haha' ),
-			Model::getUserInfo ( 'user2', 'haha2' ),
+			Model::getUserInfo ( 'user1', 'haha' ),
+			//Model::getUserInfo ( 'user2', 'haha2' ),
 		])->then(
 			new ResponseFuture ($response)
 		)->start(new PromiseContext ());
@@ -39,9 +39,9 @@ class Model {
 	
 	static public function getUserInfo($ret, $usr){
 		$params = array();
-		$url = 'http://127.0.0.1:9502/sync';
+		//$url = 'http://127.0.0.1:9502/sync';
 		//$url = 'http://192.112.121.122/store.php?id=3269';
-		//$url = 'http://localhost/';
+		$url = 'http://localhost/';
 		
 		return Service::get ( $url,$params )->then ( function ($promise) use($ret) {
 			$data = $promise->get ( 'http_data' );

@@ -5,45 +5,47 @@ namespace Core\Async;
  */
 class Timer
 {
-	static protected $event = array();
+	static protected $eventSlots = array();
+	static protected $sockSlotIndex = array();
+	static protected $tick = 0;
 	static protected $timer = null;
-	const LOOPTIME = 0.5;
+	const LOOP_TIME = 0.2;
+	const SLOT_SIZE = 10;	//超时时间 = LOOP_TIME * SLOG_SIZE
 	
-	static public function add ($sock, $timeout, $callback){
+	static public function add ($sock, $callback){
 		self::init();
-
-		$startTime = microtime(true);
-		$event = array(
-			'starttime' => microtime(true),
-			'timeout' => $timeout,
-			'callback' => $callback,
-		);
-		
-		self::$event[$sock] = $event;
+		self::$eventSlots[self::$tick][$sock] = $callback;
+		self::$sockSlotIndex[$sock] = self::$tick;
 	}
 	
 	static public function del($sock){
-		if(isset(self::$event[$sock]))unset(self::$event[$sock]);
+		if(isset(self::$sockSlotIndex[$sock])){
+			$tick = self::$sockSlotIndex[$sock];
+			unset(self::$eventSlots[$tick][$sock]);
+			unset(self::$sockSlotIndex[$sock]);
+		}
 	}
 	
-	static public function loop($t){
-		if(!self::$event)return;
+	static public function loop(){
+		self::$tick++;
+		if(self::$tick == self::SLOT_SIZE)self::$tick = 0;
+		if(!self::$eventSlots[self::$tick])return;
 
-		$now = microtime(true);
-		foreach(self::$event as $sock => $event){
-			//echo "timeout ",$now - $event['starttime'] ," ", $event['timeout'],"\n";
-			//超时处理
-			if($now - $event['starttime'] > $event['timeout']){
-				self::del($sock);
-				$cb = $event['callback'];
-				$cb();
-			}
+		foreach(self::$eventSlots[self::$tick] as $sock => $callback){
+			$callback();
+			unset(self::$sockSlotIndex[$sock]);
+			unset(self::$eventSlots[self::$tick][$sock]);
 		}
+		
+		self::$eventSlots[self::$tick] = array();
 	}
 	
 	static public function init(){
 		if (self::$timer === null){
-			self::$timer = swoole_timer_tick(1000 * self::LOOPTIME, function($tid){
+			for($i=0; $i<self::SLOT_SIZE; $i++){
+				self::$eventSlots[$i] = array();
+			}
+			self::$timer = swoole_timer_tick(1000 * self::LOOP_TIME, function($tid){
 				self::loop($tid);
 			});
 		}
