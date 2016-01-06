@@ -24,14 +24,14 @@ swoole采用自定义事件式方案，为我们提供网络层基本封装。�
 该框架使用协程模式，基于swoole与swoole framework开发。
 实现了真正的异步非阻塞开发模式，同时具有极高的性能。
 其核心代码来源于该文章[Cooperative multitasking using coroutines (in PHP!) ](http://nikic.github.io/2012/12/22/Cooperative-multitasking-using-coroutines-in-PHP.html)。
-tsf使用了较为复杂的用户态任务调度逻辑，暂时没有看到生产环境的使用案例。另外由于使用了swoole framework，也使其略显重量级。
+tsf使用了较为复杂的用户态任务调度逻辑，在腾讯openapi中使用。另外由于使用了swoole framework，略显重量级。
 
 
 swPromise的主要处理流程在Core\Async\Promise类中。
 该类实现了基本的then方法，并通过对promise流程的延迟计算，保证了异步流程的动态控制能力。
 该框架是一个非常基础的web框架，目前仅实现通用Future（通用延迟计算）、HttpClientFuture、ResponseFuture三个延迟计算类。
 
-该框架需要配合[Swoole](https://github.com/swoole/swoole-src)、[php-http-parser](https://github.com/coooold/php_http_parser)扩展使用，第二个扩展用于解析http协议。
+该框架需要配合[Swoole](https://github.com/swoole/swoole-src) master版本使用，编译参数./configure  --enable-async-httpclient，开启异步http client。
 
 ## 演示代码
 

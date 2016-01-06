@@ -24,49 +24,27 @@ class HttpClientFuture implements FutureIntf {
 
 	
 	public function run(Promise &$promise) {
-		$cli = new \swoole_client ( SWOOLE_TCP, SWOOLE_SOCK_ASYNC );
 		$urlInfo = parse_url ( $this->url );
 		$timeout = $this->timeout;
 		if(!isset($urlInfo ['port']))$urlInfo ['port'] = 80;
-		
-		$httpParser = new \HttpParser();
-
-		$cli->on ( "connect", function ($cli)use($urlInfo, &$timeout, &$promise){
-			$cli->isConnected = true;
-			$host = $urlInfo['host'];
-			if($urlInfo['port'])$host .= ':'.$urlInfo['port'];
-			$req = array();
-			$req[] = "GET {$this->url} HTTP/1.1\r\n";
-			$req[] = "User-Agent: PHP swAsync\r\n";
-			$req[] = "Host:{$host}\r\n";
-			$req[] = "Connection:close\r\n";
-			$req[] = "\r\n";
-			$req = implode('', $req);
-			$cli->send ( $req );
-		} );
-		
-		
-		$cli->on ( "receive", function ($cli, $data = "") use(&$httpParser, &$promise) {
-			$ret = $httpParser->execute($data);
-			if($ret !== false){
-				Timer::del($cli->sock);
-				$cli->isDone = true;
-				if($cli->isConnected())$cli->close();
-				$promise->accept(['http_data'=>$ret]);
-			}
-		} );
-		$cli->on ( "error", function ($cli) use(&$promise) {
-			Timer::del($cli->sock);
+        
+        $cli = new \swoole_http_client($urlInfo['host'], $urlInfo ['port']);
+		$cli->set(array(
+            'timeout' => $timeout,
+            'keepalive' => 0,
+        ));
+        $cli->on ( "error", function($cli)use(&$promise){
+            Timer::del($cli->sock);
 			$promise->accept(['http_data'=>null, 'http_error'=>'Connect error']);
+        } );
+        $cli->on ( "close", function ($cli)use(&$promise) {
 		} );
-		$cli->on ( "close", function ($cli)use(&$promise) {
-		} );
+        $cli->execute( $this->url, function ($cli)use(&$promise) {
+            Timer::del($cli->sock);
+            $cli->isDone = true;
+            $promise->accept(['http_data'=>$cli->body]);
+        } );
 
-		if($this->proxy){
-			$cli->connect ( $this->proxy['host'], $this->proxy ['port'], 0.05 );
-		}else{
-			$cli->connect ( $urlInfo ['host'], $urlInfo ['port'], 0.05 );
-		}
 		$cli->isConnected = false;
 
 		if(!$cli->errCode){

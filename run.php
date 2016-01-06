@@ -13,21 +13,22 @@ class App{
 		$http = new \swoole_http_server($host, $port, SWOOLE_BASE);
 		$http->on('request', array($this, 'onRequest'));
 		$http->set([
-			'worker_num' => 1,
+			'worker_num' => 2,
 		]);
-		$http->on('WorkerStart', array($this, 'onWorkerStart'));
+        $this->controller = new MyController();
 		$http->start();
 	}
-	
-	public function onWorkerStart(){
-		//echo "worker started\n";
-		unset($this->controller);
-		$this->controller = new MyController();
-	}
-	
+
 	public function onRequest($request, $response){
 		//echo "worker onRequest\n";
 		$this->controller->run($request, $response);
+        
+        static $i=0;
+        
+        if($i++ >= 1000){
+            echo "----->Mem: ", memory_get_usage(), "b\n";
+            $i = 0;
+        }
 	}
 }
 
